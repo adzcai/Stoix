@@ -1,0 +1,21 @@
+# ---Environment Configs---
+env_name: jaxmaze
+
+scenario:
+  name: JaxMaze-v0
+  task_name: simple
+
+kwargs:
+  train_test_pairs:
+    - [simple_maze, simple_maze]
+  pretrain_level: ~
+  max_starting_locs: 30
+  include_rotations: True
+  train_kwargs:
+    categorical_obs: False
+  eval_kwargs:
+    categorical_obs: False
+
+# Defines the metric that will be used to evaluate the performance of the agent.
+# This metric is returned at the end of an experiment and can be used for hyperparameter tuning.
+eval_metric: episode_return
