@@ -1,6 +1,7 @@
 from typing import Sequence
 
 import chex
+import jax.numpy as jnp
 import numpy as np
 from flax import linen as nn
 from flax.linen.initializers import Initializer, orthogonal
@@ -106,3 +107,35 @@ class CNNTorso(nn.Module):
         )(x)
 
         return x
+
+
+class MazeTorso(nn.Module):
+    """Torso for JaxMaze environment."""
+
+    num_objects: int
+    num_actions: int
+    num_features: int
+
+    @nn.compact
+    def __call__(self, observation: dict[str, jnp.ndarray]) -> jnp.ndarray:
+        """Forward pass."""
+        image_shape = observation["image"].shape
+        batch_shape = image_shape[:-2]
+        values, num_values = zip(
+            *[
+                (observation["image"], self.num_objects + 2),
+                (observation["position"][..., 0], image_shape[-2]),
+                (observation["position"][..., 1], image_shape[-1]),
+                (observation["task_w"].argmax(axis=-1), self.num_objects),
+                (observation["direction"], 4),
+                (observation["prev_action"], self.num_actions + 1),
+            ]
+        )
+        offsets = np.cumsum((0,) + num_values)
+        values = [
+            x.reshape(*batch_shape, -1) + offset
+            for x, offset in zip(values, offsets[:-1], strict=True)
+        ]
+        x = jnp.concat(values, axis=-1)
+        x = nn.Embed(num_embeddings=offsets[-1].item(), features=self.num_features)(x)
+        return x.reshape(*batch_shape, -1)

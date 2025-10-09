@@ -1,0 +1,5 @@
+# @package network.wm_network.observation_input_layer
+_target_: stoix.networks.torso.MazeTorso
+num_objects: 4
+num_actions: 4
+num_features: 64
