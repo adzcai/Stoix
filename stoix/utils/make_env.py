@@ -1,5 +1,6 @@
 import copy
-from typing import Any, Callable, Tuple
+import dataclasses
+from typing import TYPE_CHECKING, Any, Callable, Tuple
 
 import hydra
 from colorama import Fore, Style
@@ -7,8 +8,8 @@ from omegaconf import DictConfig
 from stoa import Environment
 from stoa import make_env as environments
 
-from stoix.utils.env_factory import EnvFactory
-from stoix.wrappers.jax_to_factory import JaxEnvFactory
+if TYPE_CHECKING:
+    from stoix.utils.env_factory import EnvFactory
 
 
 def make(config: DictConfig) -> Tuple[Environment, Environment]:
@@ -65,7 +66,7 @@ def make(config: DictConfig) -> Tuple[Environment, Environment]:
     return env, eval_env
 
 
-def make_factory(config: DictConfig) -> EnvFactory:
+def make_factory(config: DictConfig) -> "EnvFactory":
     """Creates a factory for generating environments.
 
     This is used for systems that require an environment factory rather than
@@ -106,6 +107,8 @@ def make_factory(config: DictConfig) -> EnvFactory:
     else:
         # For all other JAX-based environments, create a single instance
         # and wrap it in a JaxEnvFactory.
+        from stoix.wrappers.jax_to_factory import JaxEnvFactory
+
         train_env = make(config)[0]
         return JaxEnvFactory(
             train_env, init_seed=config.arch.seed, apply_wrapper_fn=apply_wrapper_fn
